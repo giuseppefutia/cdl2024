@@ -4,6 +4,40 @@ import numpy as np
 from sklearn.metrics import confusion_matrix
 from matplotlib.colors import LinearSegmentedColormap
 
+from cdl2024.eval.eval_funcs import predict_probabilities
+
+def generate_confusion_matrices(models, data, mask_type="test"):
+    """
+    Generates confusion matrices for multiple models on the specified mask.
+
+    Args:
+        models (dict): Dictionary where keys are model names and values are trained model instances.
+        data (torch_geometric.data.Data): Graph data object.
+        mask_type (str): Mask type to use for evaluation ('train', 'test', or 'val').
+
+    Returns:
+        dict: Dictionary containing confusion matrices for each model.
+    """
+    mask_attr = f"{mask_type}_mask"
+    if not hasattr(data, mask_attr):
+        raise ValueError(f"Invalid mask type: {mask_type}. Valid options are 'train', 'test', or 'val'.")
+
+    mask = getattr(data, mask_attr)
+    y_true = data.y[mask].cpu().numpy()
+
+    confusion_matrices = {}
+
+    for model_name, model in models.items():
+        # Generate predictions
+        test_pred = predict(model, data)[mask]
+        y_pred = test_pred.cpu().numpy()
+
+        # Calculate confusion matrix
+        cm = confusion_matrix(y_true, y_pred)
+        confusion_matrices[model_name] = cm
+
+    return confusion_matrices
+
 def plot_confusion_matrices(confusion_matrices, 
                                      class_names, 
                                      model_names, 
@@ -25,7 +59,7 @@ def plot_confusion_matrices(confusion_matrices,
     custom_cmap = LinearSegmentedColormap.from_list('custom_blue', ['#ffffff', base_color], N=256)
 
     num_matrices = len(confusion_matrices)
-    cols = 3  # Number of columns
+    cols = 2  # Number of columns
     rows = (num_matrices + cols - 1) // cols  # Calculate number of rows needed
     
     fig, axes = plt.subplots(rows, cols, figsize=figsize)

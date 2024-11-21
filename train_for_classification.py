@@ -1,4 +1,6 @@
 import torch
+import time
+
 from sklearn.metrics import (
     precision_score,
     recall_score,
@@ -91,3 +93,63 @@ def log_epoch(epoch, train_loss, train_metrics_epoch, val_metrics_epoch):
           f'Prec: {val_metrics_epoch["precision"]:.4f} - '
           f'Rec: {val_metrics_epoch["recall"]:.4f} - '
           f'F1: {val_metrics_epoch["f1_score"]:.4f}')
+
+def train_multi_models(
+                        models, 
+                        data,
+                        num_classes,
+                        num_epochs=100,
+                        lr=0.01,
+                        weight_decay=0.0005, 
+                        device='cuda'):
+    """
+    Trains and evaluates multiple models for the classification task
+
+    Args:
+        models (dict): Dictionary where keys are model names and values are model classes (uninstantiated).
+        data (torch_geometric.data.Data): Graph data object.
+        num_classes (int): Number of target classes.
+        num_epochs (int): Number of epochs for training. Default is 400.
+        lr (float): Learning rate. Default is 0.01.
+        weight_decay (float): Weight decay for the optimizer. Default is 0.0005.
+        device (str): Device to run the models on ('cuda' or 'cpu').
+
+    Returns:
+        dict: Dictionary containing training and validation metrics for all models.
+        dict: Dictionary containing the trained model instances for all models.
+    """
+    # Prepare data and loss criterion
+    data = data.to(device)
+    criterion = torch.nn.CrossEntropyLoss()
+
+    metrics = {}
+    trained_models = {}  # To store the trained model instances
+
+    for model_name, model_class in models.items():
+        print(f"\n### Training {model_name}...")
+
+        # Instantiate the model and move it to the device
+        model = model_class(num_node_features=data.num_features, num_classes=num_classes).to(device)
+
+        # Define optimizer
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+
+        # Record the start time
+        start_time = time.time()
+
+        # Train the model
+        train_val_metrics = train(num_epochs, data, model, optimizer, criterion)
+
+        # Record the end time
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+
+        # Update the global metrics dictionary
+        metrics[model_name] = train_val_metrics
+
+        # Store the trained model
+        trained_models[model_name] = model
+
+        print(f"{model_name} training completed in {elapsed_time:.2f} seconds.")
+
+    return metrics, trained_models
