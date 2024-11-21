@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.metrics import confusion_matrix
 from matplotlib.colors import LinearSegmentedColormap
 
-from cdl2024.eval.eval_funcs import predict_probabilities
+from cdl2024.eval.eval_funcs import predict
 
 def generate_confusion_matrices(models, data, mask_type="test"):
     """
