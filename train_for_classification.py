@@ -94,20 +94,23 @@ def log_epoch(epoch, train_loss, train_metrics_epoch, val_metrics_epoch):
           f'Rec: {val_metrics_epoch["recall"]:.4f} - '
           f'F1: {val_metrics_epoch["f1_score"]:.4f}')
 
-def train_multi_models(
-                        models, 
-                        data,
-                        num_classes,
-                        num_epochs=100,
-                        lr=0.01,
-                        weight_decay=0.0005, 
-                        device='cuda'):
+def train_multi_models(classifier,
+                       models, 
+                       data,
+                       hidden_dim,
+                       num_classes,
+                       num_epochs=100,
+                       lr=0.01,
+                       weight_decay=0.0005, 
+                       device='cuda'):
     """
     Trains and evaluates multiple models for the classification task
 
     Args:
+        classifier (torch.nn.Module): Classifier model.
         models (dict): Dictionary where keys are model names and values are model classes (uninstantiated).
         data (torch_geometric.data.Data): Graph data object.
+        hidden_dim (int): Hidden dimension for the model.
         num_classes (int): Number of target classes.
         num_epochs (int): Number of epochs for training. Default is 400.
         lr (float): Learning rate. Default is 0.01.
@@ -129,7 +132,9 @@ def train_multi_models(
         print(f"\n### Training {model_name}...")
 
         # Instantiate the model and move it to the device
-        model = model_class(num_node_features=data.num_features, num_classes=num_classes).to(device)
+        model = classifier(model_class(input_dim=data.num_features, 
+                                       hidden_dim=hidden_dim,
+                                       out_dim=num_classes)).to(device)
 
         # Define optimizer
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
