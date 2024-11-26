@@ -1,30 +1,39 @@
 import torch
 import torch.nn.functional as F
 
-# --------------- #
-# Node Classifers #
-# --------------- #
+# ---------------- #
+# Node Classifiers #
+# ---------------- #
 
 class NodeClassifier(torch.nn.Module):
     def __init__(self, gnn_model):
         """
-        Initializes the NodeClassificationModel with a given GNN model.
+        Initializes the NodeClassifier with a given GNN model.
 
         Args:
-            gnn_model (torch.nn.Module): A GNN model (e.g., GCN, SAGE, etc.).
+            gnn_model (torch.nn.Module): A GNN model (e.g., GCN, SAGE, GAT, etc.).
+                                         This model computes node embeddings.
         """
         super().__init__()
-        self.gnn = gnn_model
+        self.gnn = gnn_model  # Backbone GNN for learning node representations
 
-    def forward(self, data):
+    def forward(self, x, edge_index):
         """
-        Forward pass for node classification.
+        Forward pass for the node classification task.
 
         Args:
-            data (torch_geometric.data.Data): Input graph data.
+            x (torch.Tensor): Node feature matrix of shape (num_nodes, num_features).
+                              Each row represents the feature vector for a node.
+            edge_index (torch.Tensor): Graph connectivity in COO format,
+                                        with shape (2, num_edges).
+                                        Each column represents an edge (source, target).
 
         Returns:
-            torch.Tensor: Log-softmax of class probabilities for each node.
+            torch.Tensor: Log-softmax of class probabilities for each node,
+                          with shape (num_nodes, num_classes).
         """
-        x = self.gnn(data)
+        # Compute node embeddings using the GNN model
+        x = self.gnn(x, edge_index)
+        
+        # Apply log-softmax to output class probabilities for each node
         return F.log_softmax(x, dim=1)
