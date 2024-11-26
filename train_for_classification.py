@@ -19,7 +19,7 @@ def initialize_metrics_storage():
 def train_step(model, optimizer, criterion, data):
     model.train()
     optimizer.zero_grad()
-    out = model(data)
+    out = model(data.x, data.edge_index)
     loss = criterion(out[data.train_mask], data.y[data.train_mask])
     loss.backward()
     optimizer.step()
@@ -56,7 +56,7 @@ def calculate_metrics(model, data, mask_type='train'):
     mask = getattr(data, f"{mask_type}_mask")
     model.eval()
     with torch.no_grad():
-        out = model(data)
+        out = model(data.x, data.edge_index)
         pred = out[mask].argmax(dim=1)
         correct = (pred == data.y[mask]).sum()
         accuracy = int(correct) / int(mask.sum())
