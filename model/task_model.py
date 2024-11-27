@@ -1,6 +1,6 @@
 import torch
 import torch.nn.functional as F
-from util_model import MovieLensEmbedding, DotProduct
+from model.util_model import MovieLensEmbedding, DotProduct
 
 # ---------------- #
 # Node Classifiers #
