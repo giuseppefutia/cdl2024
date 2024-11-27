@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+from util_model import MovieLensEmbedding, DotProduct
 
 # ---------------- #
 # Node Classifiers #
@@ -37,3 +38,68 @@ class NodeClassifier(torch.nn.Module):
         
         # Apply log-softmax to output class probabilities for each node
         return F.log_softmax(x, dim=1)
+
+# ---------------- #
+# Link Predictors  #
+# ---------------- #
+
+class MovieLensLinkPredictor(torch.nn.Module):
+    """
+    Link prediction model for MovieLens data using heterogeneous graph neural networks.
+
+    Args:
+        gnn_model (torch.nn.Module): A GNN model for heterogeneous graph data.
+        data (dict): Dictionary containing graph data. Expected keys:
+            - "user": User node data.
+            - "movie": Movie node data.
+            - "user", "rates", "movie": Edge data for the "rates" relation.
+            - edge_index_dict: Dictionary mapping edge types to edge indices.
+        hidden_channels (int): Dimension of the hidden channels used in embeddings and GNN layers.
+    """
+    def __init__(self, gnn_model, data, hidden_channels):
+        super().__init__()
+        
+        # Initialize embeddings for the user and movie nodes
+        self.embedding = MovieLensEmbedding(
+            data["user"].num_nodes,
+            data["movie"].num_nodes,
+            hidden_channels
+        )
+
+        # Use the provided GNN model
+        self.gnn = gnn_model(data.metadata(),
+                              hidden_channels,
+                              hidden_channels,
+                              hidden_channels)
+
+        # Define the final classifier
+        self.classifier = DotProduct()
+
+    def forward(self, data):
+        """
+        Forward pass to compute link predictions.
+
+        Args:
+            data (dict): Dictionary containing graph data. Expected keys:
+                - "user": User node data.
+                - "movie": Movie node data.
+                - "user", "rates", "movie": Edge data for the "rates" relation.
+                - edge_index_dict: Dictionary mapping edge types to edge indices.
+
+        Returns:
+            torch.Tensor: Predictions for the "rates" relation.
+        """
+        # Extract user and movie node features
+        x_dict = self.embedding(data)
+
+        # Pass node features through the GNN
+        x_dict = self.gnn(x_dict, data.edge_index_dict)
+
+        # Compute predictions using the classifier
+        pred = self.classifier(
+            x_dict["user"],
+            x_dict["movie"],
+            data["user", "rates", "movie"].edge_label_index,
+        )
+
+        return pred
