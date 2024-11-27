@@ -1,7 +1,7 @@
 
 import torch
 from torch_geometric.nn import to_hetero
-from gnn_model import GraphConvModel, GAT, SAGE, GIN
+from cdl2024.model.gnn_model import GraphConvModel, GAT, SAGE, GIN
 
 class HeteroBaseModel(torch.nn.Module):
     def __init__(self, metadata, input_dim, hidden_dim, out_dim, base_model):
