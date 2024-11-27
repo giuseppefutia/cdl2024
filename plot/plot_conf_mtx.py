@@ -1,10 +1,11 @@
+import torch
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 from sklearn.metrics import confusion_matrix
 from matplotlib.colors import LinearSegmentedColormap
 
-from cdl2024.eval.eval_funcs import predict
+from cdl2024.eval.eval_funcs import predict, predict_batched
 
 def generate_confusion_matrices(models, data, mask_type="test"):
     """
@@ -31,6 +32,42 @@ def generate_confusion_matrices(models, data, mask_type="test"):
         # Generate predictions
         test_pred = predict(model, data)[mask]
         y_pred = test_pred.cpu().numpy()
+
+        # Calculate confusion matrix
+        cm = confusion_matrix(y_true, y_pred)
+        confusion_matrices[model_name] = cm
+
+    return confusion_matrices
+
+def generate_confusion_matrices_batched(models, data_loader):
+    """
+    Generates confusion matrices for multiple models using a test DataLoader.
+
+    Args:
+        models (dict): Dictionary where keys are model names and values are trained model instances.
+        data_loader (torch.utils.data.DataLoader): DataLoader for testing data.
+
+    Returns:
+        dict: Dictionary containing confusion matrices for each model.
+    """
+    confusion_matrices = {}
+
+    for model_name, model in models.items():
+        print(f"Generating confusion matrix for {model_name}...")
+        
+        # Get predictions and ground truth using batched prediction
+        preds = []
+        ground_truths = []
+
+        with torch.no_grad():
+            for batch_data in data_loader:
+                # Assuming the batch contains the ground truth edge labels
+                ground_truths.append(batch_data["user", "rates", "movie"].edge_label.cpu())
+                preds.append(predict_batched(model, [batch_data]))
+
+        # Concatenate predictions and ground truth labels across all batches
+        y_pred = torch.cat(preds, dim=0).cpu().numpy()
+        y_true = torch.cat(ground_truths, dim=0).cpu().numpy()
 
         # Calculate confusion matrix
         cm = confusion_matrix(y_true, y_pred)
