@@ -46,10 +46,6 @@ def compute_probabilities(models, data, metrics, mask_types=["test"]):
             metrics[model_name][mask_type]['licit'] = {'probas': probas_licit}
             metrics[model_name][mask_type]['illicit'] = {'probas': probas_illicit}
 
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-
 def plot_predicted_probabilities(metrics, model_names, categories, title="Comparison of Predicted Probabilities Across GNN's"):
     """
     Creates a boxplot comparing predicted probabilities for specified categories across GNN models.
