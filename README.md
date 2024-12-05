@@ -13,4 +13,4 @@ Material for CDL2024 Masterclass: "Mastering Graph Neural Networks: From Fundame
 
 ## Applications
 * [CDL 2024 - Node Classification in Bitcoin Using PyG for Anti-Money Laundering](https://colab.research.google.com/drive/1Q7DCOf5K19in5bCg2WtZdND86AxY5SmX)
-* [CDL 2024 - Link Prediction in MovieLens with PyG for Recommendation Systems](https://colab.research.google.com/drive/1E3Ew6PnQhNe-q3mDX_dAlaKlMPRfN0vW?usp=sharing) 
+* [CDL 2024 - Link Prediction in MovieLens Using PyG for Recommendation Systems](https://colab.research.google.com/drive/1E3Ew6PnQhNe-q3mDX_dAlaKlMPRfN0vW?usp=sharing) 
