@@ -2,7 +2,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from cdl2024.eval.eval_funcs import predict_probabilities
+from cdl2024.eval.eval_funcs import predict_probabilities, predict_probabilities_batched
 
 def compute_probabilities(models, data, metrics, mask_types=["test"]):
     """
@@ -45,6 +45,57 @@ def compute_probabilities(models, data, metrics, mask_types=["test"]):
 
             metrics[model_name][mask_type]['licit'] = {'probas': probas_licit}
             metrics[model_name][mask_type]['illicit'] = {'probas': probas_illicit}
+
+def compute_probabilities_batched(models, dataloader, metrics, dataset_type, class_names, device='cpu'):
+    """
+    Computes and updates probabilities for specified classes across multiple GNN models with HeteroData.
+
+    Args:
+        models (dict): Dictionary of models where keys are model names and values are trained model instances.
+        dataloader (torch.utils.data.DataLoader): DataLoader providing HeteroData batches.
+        metrics (dict): Dictionary to store computed probabilities.
+        dataset_type (str): Dataset type (e.g., 'train', 'val', 'test') used as the key in the metrics dictionary.
+        class_names (list): List of class names (e.g., ['class_0', 'class_1']).
+        device (str): Device to use for computation ('cpu' or 'cuda').
+
+    Example structure of metrics after updates:
+    {
+        'GCN': {
+            'train': {
+                'class_0': {'probas': [...]},
+                'class_1': {'probas': [...]}
+            },
+            'test': { ... }
+        },
+        'GAT': { ... },
+        'GIN': { ... }
+    }
+    """
+    if len(class_names) != 2:
+        raise ValueError("This function supports binary classification, so `class_names` must have exactly two entries.")
+
+    for model_name, model in models.items():
+        model.to(device)
+
+        # Use the provided function to compute probabilities for the specified edge type
+        probas_class_1 = predict_probabilities_batched(
+            model, dataloader, device=device
+        ).cpu().numpy()
+
+        # Probabilities for class_0 are 1 - class_1 probabilities
+        probas_class_0 = 1 - probas_class_1
+
+        # Update the metrics dictionary
+        if model_name not in metrics:
+            metrics[model_name] = {}
+        if dataset_type not in metrics[model_name]:
+            metrics[model_name][dataset_type] = {}
+
+        # Populate the metrics for the specific dataset type
+        metrics[model_name][dataset_type] = {
+            class_names[0]: {'probas': probas_class_0},
+            class_names[1]: {'probas': probas_class_1}
+        }
 
 def plot_predicted_probabilities(metrics, model_names, categories, title="Comparison of Predicted Probabilities Across GNN's"):
     """
