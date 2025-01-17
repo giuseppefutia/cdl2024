@@ -68,7 +68,7 @@ class GraphConvModel(BaseGraphModel):
 # --------- #
 
 class GAT(BaseGraphModel):
-    def __init__(self, input_dim, hidden_dim, out_dim, num_heads=8, add_self_loops=True, dropout=0.6):
+    def __init__(self, input_dim, hidden_dim, out_dim, num_heads=8, add_self_loops=True):
         # Adjust hidden_dim to account for concatenated heads in GAT
         concat_hidden_dim = hidden_dim * num_heads
 
@@ -78,7 +78,6 @@ class GAT(BaseGraphModel):
             out_channels=hidden_dim,
             heads=num_heads,
             add_self_loops=add_self_loops,
-            dropout=dropout
         )
 
         # Define the second GATConv layer
@@ -88,7 +87,6 @@ class GAT(BaseGraphModel):
             heads=1,  # Single head for the final layer
             add_self_loops=add_self_loops,
             concat=False,  # Disable concatenation for the final output
-            dropout=dropout
         )
 
         # Initialize the parent class but skip conv_layer initialization
