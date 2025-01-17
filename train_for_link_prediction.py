@@ -42,9 +42,9 @@ def train_step(model, optimizer, train_loader, device):
         y_true = ground.cpu().numpy()
         y_pred = preds.cpu().numpy()
         total_metrics['accuracy'] += accuracy_score(y_true, y_pred)
-        total_metrics['precision'] += precision_score(y_true, y_pred, zero_division=0)
-        total_metrics['recall'] += recall_score(y_true, y_pred, zero_division=0)
-        total_metrics['f1_score'] += f1_score(y_true, y_pred, zero_division=0)
+        total_metrics['precision'] += precision_score(y_true, y_pred, average='weighted', zero_division=0)
+        total_metrics['recall'] += recall_score(y_true, y_pred, average='weighted', zero_division=0)
+        total_metrics['f1_score'] += f1_score(y_true, y_pred, average='weighted', zero_division=0)
 
     # Average loss and metrics across batches
     avg_loss = total_loss / len(train_loader)
@@ -74,9 +74,9 @@ def validate_step(model, val_loader, device):
             y_true = ground.cpu().numpy()
             y_pred = preds.cpu().numpy()
             total_metrics['accuracy'] += accuracy_score(y_true, y_pred)
-            total_metrics['precision'] += precision_score(y_true, y_pred, zero_division=0)
-            total_metrics['recall'] += recall_score(y_true, y_pred, zero_division=0)
-            total_metrics['f1_score'] += f1_score(y_true, y_pred, zero_division=0)
+            total_metrics['precision'] += precision_score(y_true, y_pred, average='weighted', zero_division=0)
+            total_metrics['recall'] += recall_score(y_true, y_pred, average='weighted', zero_division=0)
+            total_metrics['f1_score'] += f1_score(y_true, y_pred, average='weighted', zero_division=0)
 
     # Average metrics across batches
     for key in total_metrics:
