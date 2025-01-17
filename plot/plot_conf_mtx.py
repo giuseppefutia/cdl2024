@@ -58,10 +58,12 @@ def generate_confusion_matrices_batched(models, data_loader):
         # Get predictions and ground truth using batched prediction
         preds = []
         ground_truths = []
+        device = next(model.parameters()).device
 
         with torch.no_grad():
             for batch_data in data_loader:
                 # Assuming the batch contains the ground truth edge labels
+                batch_data = batch_data.to(device)
                 ground_truths.append(batch_data["user", "rates", "movie"].edge_label.cpu())
                 preds.append(predict_batched(model, [batch_data]))
 

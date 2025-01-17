@@ -20,9 +20,11 @@ def predict_batched(model, data_loader):
     """
     model.eval()
     preds = []
+    device = next(model.parameters()).device
 
     with torch.no_grad():
         for batch_data in data_loader:
+            batch_data = batch_data.to(device)
             out = model(batch_data)
             probs = torch.sigmoid(out)
             preds.append((probs >= 0.5).float())
